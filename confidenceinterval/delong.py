@@ -15,7 +15,6 @@ from scipy import stats
 # AUC comparison adapted from
 # https://github.com/Netflix/vmaf/
 
-
 def compute_midrank(x):
     """
     Computes midranks for a 1D numpy array.
@@ -27,20 +26,18 @@ def compute_midrank(x):
        numpy.ndarray: An array of midranks.
     """
     # Sort the input array and get the indices of the sorted elements
-    indices = np.argsort(x)
-    sorted_x = x[indices]
+    sorted_indices = np.argsort(x)
+    sorted_x = x[sorted_indices]
     n = len(x)
     midranks = np.zeros(n, dtype=np.float32)
-    i = 0
-    while i < n:
-        j = i
-        while j < n and sorted_x[j] == sorted_x[i]:
-            j += 1
-        midranks[i:j] = 0.5 * (i + j - 1)
-        i = j
+    # Compute the midranks using NumPy vectorization
+    midranks[0] = 0.5
+    midranks[1:] = np.cumsum(sorted_x[:-1] != sorted_x[1:]) + 1.5
     # Map the midranks back to the original indices
     mapped_midranks = np.empty(n, dtype=np.float32)
-    mapped_midranks[indices] = midranks + 1 # +1 due to Python using 0-based indexing
+     # Note(kazeevn) +1 is due to Python using 0-based indexing
+    # instead of 1-based in the AUC formula in the paper
+    mapped_midranks[sorted_indices] = midranks + 1
     return mapped_midranks
 
 
