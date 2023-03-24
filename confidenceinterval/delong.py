@@ -38,31 +38,41 @@ def compute_midrank(x):
      # Note(kazeevn) +1 is due to Python using 0-based indexing
     # instead of 1-based in the AUC formula in the paper
     mapped_midranks[sorted_indices] = midranks + 1
+
     return mapped_midranks
 
 
 def compute_midrank_weight(x, sample_weight):
-    """Computes midranks.
-    Args:
-       x - a 1D numpy array
-    Returns:
-       array of midranks
     """
-    J = np.argsort(x)
-    Z = x[J]
-    cumulative_weight = np.cumsum(sample_weight[J])
-    N = len(x)
-    T = np.zeros(N, dtype=np.float32)
-    i = 0
-    while i < N:
-        j = i
-        while j < N and Z[j] == Z[i]:
-            j += 1
-        T[i:j] = cumulative_weight[i:j].mean()
-        i = j
-    T2 = np.empty(N, dtype=np.float32)
-    T2[J] = T
-    return T2
+    Computes weighted midranks for a 1D numpy array.
+
+    Args:
+       x (numpy.ndarray): A 1D numpy array.
+       sample_weight (numpy.ndarray): A 1D numpy array of sample weights.
+
+    Returns:
+       numpy.ndarray: An array of weighted midranks.
+    """
+    # Sort the input array and get the indices of the sorted elements
+    sorted_indices = np.argsort(x)
+    sorted_x = x[sorted_indices]
+    sorted_sample_weight = sample_weight[sorted_indices]
+    n = len(x)
+    cumulative_weight = np.cumsum(sorted_sample_weight)
+    # Compute the lengths of each group of equal values
+    group_lengths = np.concatenate(([1], np.diff(sorted_x).astype(bool)))
+    # Compute the weights of each group of equal values
+    group_weights = cumulative_weight[group_lengths]
+    # Compute the weighted midrank of each group of equal values
+    group_weighted_midranks = np.divide(group_weights[:-1], np.diff(cumulative_weight[group_lengths.nonzero()]))
+    # Repeat the weighted midranks for each element in each group of equal values
+    weighted_midranks = np.repeat(group_weighted_midranks, np.diff(np.flatnonzero(group_lengths)))
+    # Map the weighted midranks back to the original indices
+    mapped_weighted_midranks = np.empty(n, dtype=np.float32)
+    mapped_weighted_midranks[sorted_indices] = weighted_midranks
+
+    return mapped_weighted_midranks
+
 
 
 def fastDeLong(predictions_sorted_transposed, label_1_count, sample_weight):
