@@ -1,4 +1,7 @@
 import pytest
+import sklearn.metrics
+import numpy as np
+
 from confidenceinterval import accuracy_score, \
                                ppv_score, \
                                npv_score, \
@@ -8,10 +11,9 @@ from confidenceinterval import accuracy_score, \
                                precision_score, \
                                recall_score, \
                                f1_score, \
-                               roc_auc_score    
-import sklearn.metrics
+                               roc_auc_score
+from confidenceinterval.delong import compute_midrank, compute_midrank_weight
 
-import numpy as np
 @pytest.mark.parametrize("data",
     [ ( [0, 0, 0, 0, 1, 1, 1, 1, 0],
         [0, 0, 1, 0, 1, 0, 1, 1, 0] )])        
@@ -78,3 +80,14 @@ def test_auc():
 def test_compute_midrank(input_array, expected_output_array):
     actual_output = compute_midrank(input_array)
     assert np.allclose(actual_output, expected_output_array)
+
+# Added test for compute_midrank_weight
+@pytest.mark.parametrize("x, sample_weight, expected", [
+    (np.array([1, 2, 2, 3, 4]), np.array([1, 2, 1, 1, 1]), np.array([1.0, 3.5, 3.5, 4.0, 5.0])),
+    (np.array([0, 1, 2, 3, 4]), np.array([1, 1, 1, 1, 1]), np.array([0.5, 1.5, 2.5, 3.5, 4.5])),
+    (np.array([1, 1, 1, 1, 1]), np.array([2, 1, 1, 1, 1]), np.array([2.0, 2.0, 2.0, 2.0, 2.0])),
+])
+def test_compute_midrank_weight(x, sample_weight, expected):
+    result = compute_midrank_weight(x, sample_weight)
+    assert np.allclose(result, expected, atol=1e-6)
+
