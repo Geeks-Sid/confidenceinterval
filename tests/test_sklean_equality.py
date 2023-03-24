@@ -67,3 +67,14 @@ def test_auc():
     auc_bootstrap, ci_bootstrap = roc_auc_score(y_true, y_pred, method='bootstrap_bca')
     assert pytest.approx(auc, 0.01) == auc_bootstrap
     print(auc, ci, auc_bootstrap, ci_bootstrap)
+
+# Test for compute_midrank
+@pytest.mark.parametrize("input_array, expected_output_array", [
+    (np.array([0, 1, 2, 2, 4, 5, 5, 5, 8]), np.array([0.5, 2.0, 3.5, 3.5, 5.5, 7.0, 7.0, 7.0, 8.5])),
+    (np.array([0, 0, 0, 1, 1, 1]), np.array([1.0, 2.0, 3.0, 4.5, 4.5, 4.5])),
+    (np.array([1, 2, 3, 4]), np.array([1.5, 2.5, 3.5, 4.5])),
+    (np.array([1, 1, 1, 1]), np.array([2.5, 2.5, 2.5, 2.5]))
+])
+def test_compute_midrank(input_array, expected_output_array):
+    actual_output = compute_midrank(input_array)
+    assert np.allclose(actual_output, expected_output_array)
