@@ -17,28 +17,31 @@ from scipy import stats
 
 
 def compute_midrank(x):
-    """Computes midranks.
-    Args:
-       x - a 1D numpy array
-    Returns:
-       array of midranks
     """
-    J = np.argsort(x)
-    Z = x[J]
-    N = len(x)
-    T = np.zeros(N, dtype=np.float32)
+    Computes midranks for a 1D numpy array.
+
+    Args:
+       x (numpy.ndarray): A 1D numpy array.
+
+    Returns:
+       numpy.ndarray: An array of midranks.
+    """
+    # Sort the input array and get the indices of the sorted elements
+    indices = np.argsort(x)
+    sorted_x = x[indices]
+    n = len(x)
+    midranks = np.zeros(n, dtype=np.float32)
     i = 0
-    while i < N:
+    while i < n:
         j = i
-        while j < N and Z[j] == Z[i]:
+        while j < n and sorted_x[j] == sorted_x[i]:
             j += 1
-        T[i:j] = 0.5 * (i + j - 1)
+        midranks[i:j] = 0.5 * (i + j - 1)
         i = j
-    T2 = np.empty(N, dtype=np.float32)
-    # Note(kazeevn) +1 is due to Python using 0-based indexing
-    # instead of 1-based in the AUC formula in the paper
-    T2[J] = T + 1
-    return T2
+    # Map the midranks back to the original indices
+    mapped_midranks = np.empty(n, dtype=np.float32)
+    mapped_midranks[indices] = midranks + 1 # +1 due to Python using 0-based indexing
+    return mapped_midranks
 
 
 def compute_midrank_weight(x, sample_weight):
